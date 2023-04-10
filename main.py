@@ -28,9 +28,13 @@ async def help_command(update: Update, context: CallbackContext) -> None:
 
 async def agep(update: Update, context: CallbackContext) -> None:
     """Send a message when the command /help is issued."""
-    sticker = stickergen.gen_sticker_agep("Yo la zone")
+    text_parts = update.message.text.split(' ', 1)
+    if len(text_parts) > 1:
+        _, text = text_parts
+    else:
+        text = 'Yo wtf - GIBE TEXT !'
+    sticker = stickergen.gen_sticker_agep(text)
     await update.message.reply_sticker(sticker)
-    await update.message.reply_text('Agepoulay')
     return
 
 
