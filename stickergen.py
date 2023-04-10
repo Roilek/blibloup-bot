@@ -29,7 +29,7 @@ def gen_sticker(text, font_name, color, background_color) -> Image:
     textwidth, textheight = draw.textsize(text, font)
     x = (512 - textwidth) / 2
     y = (512 - textheight) / 2
-    draw.text((x, y), text, font=font, fill=color)
+    draw.text((x, y), text, font=font, fill=color, align="center")
 
     with io.BytesIO() as bio:
         img.save(bio, format='PNG')
