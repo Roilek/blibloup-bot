@@ -5,6 +5,8 @@ from telegram import Update
 from telegram.constants import ParseMode
 from telegram.ext import Application, CommandHandler, CallbackContext, MessageHandler, filters
 
+import stickergen
+
 load_dotenv()
 
 TOKEN = os.getenv("TOKEN")
@@ -20,7 +22,15 @@ async def start(update: Update, context: CallbackContext) -> None:
 
 async def help_command(update: Update, context: CallbackContext) -> None:
     """Send a message when the command /help is issued."""
-    await update.message.reply_text('Contactez @eliorpap ou @sxyBoi pour plus d\'infos !')
+    await update.message.reply_text('Contactez @eliorpap pour plus d\'infos !')
+    return
+
+
+async def agep(update: Update, context: CallbackContext) -> None:
+    """Send a message when the command /help is issued."""
+    sticker = stickergen.gen_sticker_agep("Yo la zone")
+    await update.message.reply_sticker(sticker)
+    await update.message.reply_text('Agepoulay')
     return
 
 
@@ -34,6 +44,7 @@ def main() -> None:
     # on different commands - answer in Telegram
     application.add_handler(CommandHandler("start", start))
     application.add_handler(CommandHandler("help", help_command))
+    application.add_handler(CommandHandler("agep", agep))
 
     # Start the Bot
     print("Bot starting...")
