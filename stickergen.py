@@ -41,7 +41,7 @@ def gen_sticker(text, font_name, color, background_color) -> Image:
 
 
 def gen_sticker_agep(text) -> Image:
-    return gen_sticker(text, "agepoly.ttf", "red", "blank")
+    return gen_sticker(text, "agepoly.ttf", (227, 5, 19), "blank")
 
 
 def test_gen_sticker() -> None:

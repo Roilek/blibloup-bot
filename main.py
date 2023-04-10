@@ -1,9 +1,10 @@
 import os
+from uuid import uuid4
 
 from dotenv import load_dotenv
-from telegram import Update
+from telegram import Update, InlineQueryResultCachedSticker
 from telegram.constants import ParseMode
-from telegram.ext import Application, CommandHandler, CallbackContext, MessageHandler, filters
+from telegram.ext import Application, CommandHandler, CallbackContext, InlineQueryHandler
 
 import stickergen
 
@@ -12,6 +13,7 @@ load_dotenv()
 TOKEN = os.getenv("TOKEN")
 PORT = int(os.getenv('PORT', 5000))
 HEROKU_PATH = os.getenv('HEROKU_PATH')
+LOG_GROUP_ID = int(os.getenv('LOG_GROUP_ID'))
 
 
 async def start(update: Update, context: CallbackContext) -> None:
@@ -38,6 +40,27 @@ async def agep(update: Update, context: CallbackContext) -> None:
     return
 
 
+async def inline(update: Update, context: CallbackContext) -> None:
+    """Generate a sticker based on the inline query."""
+    query = update.inline_query.query
+    if not query:
+        return
+    sticker = stickergen.gen_sticker_agep(query)
+    sticker_message = await context.bot.send_sticker(chat_id=LOG_GROUP_ID, sticker=sticker)
+    result = InlineQueryResultCachedSticker(
+        id=query,
+        sticker_file_id=sticker_message.sticker.file_id,
+    )
+    await update.inline_query.answer([result])
+    return
+
+
+async def dump(update: Update, context: CallbackContext) -> None:
+    """Dump the update object."""
+    await update.message.reply_text(f"```{update}```", parse_mode=ParseMode.MARKDOWN_V2)
+    return
+
+
 def main() -> None:
     """Start the bot."""
     print("Going live!")
@@ -49,6 +72,10 @@ def main() -> None:
     application.add_handler(CommandHandler("start", start))
     application.add_handler(CommandHandler("help", help_command))
     application.add_handler(CommandHandler("agep", agep))
+    application.add_handler(CommandHandler("dump", dump))
+
+    # Set up the InlineQueryHandler for the agep function
+    application.add_handler(InlineQueryHandler(inline))
 
     # Start the Bot
     print("Bot starting...")
