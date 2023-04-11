@@ -1,5 +1,4 @@
 import os
-from uuid import uuid4
 
 from dotenv import load_dotenv
 from telegram import Update, InlineQueryResultCachedSticker
@@ -7,6 +6,8 @@ from telegram.constants import ParseMode
 from telegram.ext import Application, CommandHandler, CallbackContext, InlineQueryHandler
 
 import stickergen
+
+# Load the environment variables
 
 load_dotenv()
 
@@ -30,6 +31,7 @@ async def help_command(update: Update, context: CallbackContext) -> None:
 
 async def agep(update: Update, context: CallbackContext) -> None:
     """Send a message when the command /help is issued."""
+    # Get the text from the message and generate the sticker from it (or use a default text)
     text_parts = update.message.text.split(' ', 1)
     if len(text_parts) > 1:
         _, text = text_parts
@@ -42,6 +44,7 @@ async def agep(update: Update, context: CallbackContext) -> None:
 
 async def inline(update: Update, context: CallbackContext) -> None:
     """Generate a sticker based on the inline query."""
+    # Get the text from the inline query and generate the sticker from it (or use a default text)
     query = update.inline_query.query
     if not query:
         return
