@@ -38,7 +38,7 @@ Here is a list of features we would like to implement in the future.
 
 ## Support
 
-If you need help, you can contact us on Telegram at [@Roilek](https://t.me/Roilek) and [@O_l_i_v_i_e_r](https://t.me/O_l_i_v_i_e_r).
+If you need help, you can contact us on Telegram at [@eliorpap](https://t.me/eliorpap) and [@O_l_i_v_i_e_r](https://t.me/O_l_i_v_i_e_r).
 
 If you want to contact us regarding installation problems, please make sure you have followed the [Installation](#installation) instructions, looked over the internet for your problem, and asked enough ChatGPT about it ;)
 
