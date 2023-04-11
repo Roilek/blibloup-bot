@@ -8,13 +8,26 @@ MIN_FONT_SIZE, MAX_FONT_SIZE = 1, 1000
 
 def gen_sticker(text, font_name, color) -> Image:
     """Generate a sticker from a text, a font, and a text color."""
-    # Binary search to find maximum font size that fits in image
-    min_font_size, max_font_size = MIN_FONT_SIZE, MAX_FONT_SIZE
+    font_size = MAX_FONT_SIZE
+    # Binary search to find maximum font size that fits the width
+    for line in text.splitlines():
+        min_font_size, max_font_size = MIN_FONT_SIZE, font_size
+        while max_font_size - min_font_size > 1:
+            font_size = (min_font_size + max_font_size) // 2
+            font = ImageFont.truetype(font_name, font_size)
+            text_width, text_height = font.getsize(line)
+            if text_width > WIDTH:
+                max_font_size = font_size
+            else:
+                min_font_size = font_size
+
+    # Binary search to find maximum font size that fits the height
+    min_font_size, max_font_size = MIN_FONT_SIZE, font_size
     while max_font_size - min_font_size > 1:
         font_size = (min_font_size + max_font_size) // 2
         font = ImageFont.truetype(font_name, font_size)
         text_width, text_height = font.getsize(text)
-        if text_width > WIDTH or text_height > HEIGHT:
+        if text_height > HEIGHT:
             max_font_size = font_size
         else:
             min_font_size = font_size
@@ -22,14 +35,14 @@ def gen_sticker(text, font_name, color) -> Image:
     # Create image
     img = Image.new('RGBA', (WIDTH, HEIGHT), color=(0, 0, 0, 0))
     # Load font
-    font = ImageFont.truetype(font_name)
+    font = ImageFont.truetype(font_name, font_size)
     # Draw text
     draw = ImageDraw.Draw(img)
 
     # Get text size
-    textwidth, textheight = draw.textsize(text, font)
-    x = (WIDTH - textwidth) / 2
-    y = (HEIGHT - textheight) / 2
+    text_width, text_height = draw.textsize(text, font)
+    x = (WIDTH - text_width) / 2
+    y = (HEIGHT - text_height) / 2
     draw.text((x, y), text, font=font, fill=color, align="center")
 
     # Convert to bytes

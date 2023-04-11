@@ -1,4 +1,5 @@
 import os
+import uuid
 
 from dotenv import load_dotenv
 from telegram import Update, InlineQueryResultCachedSticker
@@ -51,7 +52,7 @@ async def inline(update: Update, context: CallbackContext) -> None:
     sticker = stickergen.gen_sticker_agep(query)
     sticker_message = await context.bot.send_sticker(chat_id=LOG_GROUP_ID, sticker=sticker)
     result = InlineQueryResultCachedSticker(
-        id=query,
+        id=str(uuid.uuid4()),
         sticker_file_id=sticker_message.sticker.file_id,
     )
     await update.inline_query.answer([result])
