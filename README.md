@@ -7,19 +7,19 @@ Blibloup_Bot is a Telegram bot hosted on Heroku that aims to provide many featur
 - Creating ical files
 
 We are very open to any suggestion and contribution! See [Contributing](#contributing) section for more information.
-***
+
 ## Usage
 
 You can use the bot by sending a message to [@Blibloup_Bot](https://t.me/Blibloup_bot).
 
 If you want to create you own instance of the bot and run it locally or on your own server, please see the [Installation](#installation) section.
-***
+
 ## What does it do?
 
 ### AGEPACK sticker generation
 
 You can generate a sticker from a text.
-***
+
 ## Roadmap
 
 Here is a list of features we would like to implement in the future.
@@ -27,13 +27,13 @@ Here is a list of features we would like to implement in the future.
 - [ ] Sticker generation
 - [ ] Pimping text
 - [ ] Creating ical files
-***
+
 ## Support
 
 If you need help, you can contact us on Telegram at [@Roilek](https://t.me/Roilek) and [@O_l_i_v_i_e_r](https://t.me/O_l_i_v_i_e_r).
 
 If you want to contact us regarding installation problems, please make sure you have followed the [Installation](#installation) instructions, looked over the internet for your problem, and asked enough ChatGPT about it ;)
-***
+
 ## Installation
 
 Please note that the following instructions assume you have python installed and have some kind of a functional development environment.
@@ -70,7 +70,7 @@ Make sure to keep your `.env` file secret!
 ```bash
 python main.py
 ```
-***
+
 ## Contributing
 
 
@@ -82,7 +82,7 @@ Create an issue or send us a message over Telegram!
 ### Want to implement a feature?
 Create a pull request!\
 Please test your code before submitting it, and make sure it is well documented.
-***
+
 ## License
 
 This project is licensed under the GNU General Public License v3.0 - see the [LICENSE](LICENSE) file for details.
