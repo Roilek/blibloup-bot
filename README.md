@@ -18,7 +18,15 @@ If you want to create you own instance of the bot and run it locally or on your 
 
 ### AGEPACK sticker generation
 
-You can generate a sticker from a text.
+You can generate a sticker from text.\
+Either by directly interacting with the bot.
+
+![test](resources/images/direct.jpg)
+
+Or by using the inline mode in any group or chat
+
+![test](resources/images/inline_gen.jpg) ![test](resources/images/inline_sent.jpg)
+
 
 ## Roadmap
 
