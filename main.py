@@ -27,7 +27,11 @@ async def start(update: Update, context: CallbackContext) -> None:
 
 async def help_command(update: Update, context: CallbackContext) -> None:
     """Send a message when the command /help is issued."""
-    await update.message.reply_text('Contactez @eliorpap pour plus d\'infos !')
+    text = "Vous pouvez utiliser les commandes suivantes !\n"
+    text += "/agep <text> : génère un sticker avec le texte donné\n"
+    text += "/cdd : affiche les candidatures en cours\n"
+    text += "/help : affiche ce message\n"
+    await update.message.reply_text(text)
     return
 
 
