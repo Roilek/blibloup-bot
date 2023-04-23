@@ -2,10 +2,11 @@ import os
 import uuid
 
 from dotenv import load_dotenv
-from telegram import Update, InlineQueryResultCachedSticker
+from telegram import Update, InlineQueryResultCachedSticker, InlineQueryResultArticle, InputTextMessageContent
 from telegram.constants import ParseMode
 from telegram.ext import Application, CommandHandler, CallbackContext, InlineQueryHandler
 
+import scrapping
 import stickergen
 
 # Load the environment variables
@@ -43,19 +44,34 @@ async def agep(update: Update, context: CallbackContext) -> None:
     return
 
 
+async def candidatures(update: Update, context: CallbackContext) -> None:
+    await update.message.reply_text(scrapping.get_html_candidats(), parse_mode=ParseMode.HTML)
+    return
+
+
 async def inline(update: Update, context: CallbackContext) -> None:
     """Generate a sticker based on the inline query."""
     # Get the text from the inline query and generate the sticker from it (or use a default text)
     query = update.inline_query.query
     if not query:
         return
-    sticker = stickergen.gen_sticker_agep(query)
-    sticker_message = await context.bot.send_sticker(chat_id=LOG_GROUP_ID, sticker=sticker)
-    result = InlineQueryResultCachedSticker(
-        id=str(uuid.uuid4()),
-        sticker_file_id=sticker_message.sticker.file_id,
-    )
-    await update.inline_query.answer([result])
+
+    if query == 'cdd':
+        html_text = scrapping.get_html_candidats()
+        result = InlineQueryResultArticle(
+            id=str(uuid.uuid4()),
+            title='Les candidatures à ce jour !',
+            input_message_content=InputTextMessageContent(html_text, parse_mode='HTML')
+        )
+        await update.inline_query.answer([result], cache_time=0)
+    else:
+        sticker = stickergen.gen_sticker_agep(query)
+        sticker_message = await context.bot.send_sticker(chat_id=LOG_GROUP_ID, sticker=sticker)
+        result = InlineQueryResultCachedSticker(
+            id=str(uuid.uuid4()),
+            sticker_file_id=sticker_message.sticker.file_id,
+        )
+        await update.inline_query.answer([result])
     return
 
 
@@ -76,6 +92,7 @@ def main() -> None:
     application.add_handler(CommandHandler("start", start))
     application.add_handler(CommandHandler("help", help_command))
     application.add_handler(CommandHandler("agep", agep))
+    application.add_handler(CommandHandler("cdd", candidatures))
     application.add_handler(CommandHandler("dump", dump))
 
     # Set up the InlineQueryHandler for the agep function
