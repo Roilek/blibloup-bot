@@ -26,7 +26,7 @@ def gen_sticker(text, font_name, color) -> Image:
     while max_font_size - min_font_size > 1:
         font_size = (min_font_size + max_font_size) // 2
         font = ImageFont.truetype(font_name, font_size)
-        text_width, text_height = font.getsize(text)
+        text_width, text_height = font.getsize_multiline(text)
         if text_height > HEIGHT:
             max_font_size = font_size
         else:

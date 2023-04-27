@@ -2,7 +2,7 @@ import requests
 from bs4 import BeautifulSoup
 
 
-def candidate_list():
+def candidate_list() -> dict:
     url = "https://agepoly.ch/candidatures-agepoly-2023-2024/"
     response = requests.get(url)
     content = response.text
@@ -36,4 +36,5 @@ def get_html_candidats() -> str:
 
 
 if __name__ == "__main__":
+    # print(candidate_list())
     print(get_html_candidats())

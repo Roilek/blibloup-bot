@@ -60,22 +60,24 @@ async def inline(update: Update, context: CallbackContext) -> None:
     if not query:
         return
 
+    result = []
+
     if query == 'cdd':
         html_text = scrapping.get_html_candidats()
-        result = InlineQueryResultArticle(
+        result.append(InlineQueryResultArticle(
             id=str(uuid.uuid4()),
             title='Les candidatures à ce jour !',
             input_message_content=InputTextMessageContent(html_text, parse_mode='HTML')
-        )
-        await update.inline_query.answer([result], cache_time=0)
+        ))
     else:
         sticker = stickergen.gen_sticker_agep(query)
         sticker_message = await context.bot.send_sticker(chat_id=LOG_GROUP_ID, sticker=sticker)
-        result = InlineQueryResultCachedSticker(
+        result.append(InlineQueryResultCachedSticker(
             id=str(uuid.uuid4()),
             sticker_file_id=sticker_message.sticker.file_id,
-        )
-        await update.inline_query.answer([result])
+        ))
+
+    await update.inline_query.answer(result, cache_time=0)
     return
 
 
