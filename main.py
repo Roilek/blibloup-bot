@@ -1,11 +1,16 @@
+import argparse
+import asyncio
+import datetime
 import os
 import uuid
 
+import telegram
 from dotenv import load_dotenv
 from telegram import Update, InlineQueryResultCachedSticker, InlineQueryResultArticle, InputTextMessageContent
 from telegram.constants import ParseMode
 from telegram.ext import Application, CommandHandler, CallbackContext, InlineQueryHandler
 
+import database
 import scrapping
 import stickergen
 
@@ -48,9 +53,36 @@ async def agep(update: Update, context: CallbackContext) -> None:
     return
 
 
-async def candidatures(update: Update, context: CallbackContext) -> None:
-    await update.message.reply_text(scrapping.get_html_candidats(), parse_mode=ParseMode.HTML)
+async def register(update: Update, context: CallbackContext) -> None:
+    """Register a new user."""
+    _, text = update.message.text.split(' ', 1)
+    database.subscribe_user(update.message.from_user.id, update.effective_user.first_name, text)
+    await update.message.reply_text(f"Magnifique ! Tu recevras désormais les notifications qui concernent la fonctionnalité {text}!")
     return
+
+
+async def candidatures(update: Update, context: CallbackContext) -> None:
+    print(await update.message.reply_text(scrapping.get_html_candidats(), parse_mode=ParseMode.HTML))
+    return
+
+
+async def auto_candidatures() -> None:
+    bot = telegram.Bot(token=TOKEN)
+    text = scrapping.get_html_candidats()
+    if text != database.get_ref_message("cdd"):
+        print("New candidature ! Sending to people")
+        database.set_ref_message("cdd", text)
+        users = database.get_subscribed_users("cdd")
+        text = "Timestamp : " + str(datetime.datetime.now().strftime("%d/%m/%Y, %H:%M")) + "\nNouvelle candidature !\n\n" + text
+        for user in users:
+            try:
+                await bot.send_message(chat_id=user['_id'], text=text, parse_mode=ParseMode.HTML)
+            except Exception as e:
+                print(e)
+        return
+    else:
+        print("No new candidature !")
+        return
 
 
 async def inline(update: Update, context: CallbackContext) -> None:
@@ -91,6 +123,19 @@ def main() -> None:
     """Start the bot."""
     print("Going live!")
 
+    # Parse the arguments
+    parser = argparse.ArgumentParser()
+    parser.add_argument("function",
+                        nargs='?',
+                        help="The function to execute",
+                        choices=["cdd"])
+    args = parser.parse_args()
+
+    # If a function is specified, execute it and exit
+    if args.function == "cdd":
+        asyncio.run(auto_candidatures())
+        return
+
     # Create application
     application = Application.builder().token(TOKEN).build()
 
@@ -98,6 +143,7 @@ def main() -> None:
     application.add_handler(CommandHandler("start", start))
     application.add_handler(CommandHandler("help", help_command))
     application.add_handler(CommandHandler("agep", agep))
+    application.add_handler(CommandHandler("reg", register))
     application.add_handler(CommandHandler("cdd", candidatures))
     application.add_handler(CommandHandler("dump", dump))
 
@@ -116,4 +162,6 @@ def main() -> None:
 
 
 if __name__ == '__main__':
+    database.setup()
     main()
+    # asyncio.run(auto_candidatures())

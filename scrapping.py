@@ -6,6 +6,8 @@ def candidate_list() -> dict:
     url = "https://agepoly.ch/candidatures-agepoly-2023-2024/"
     response = requests.get(url)
     content = response.text
+    # with open("tests.html", "r") as f:
+    #     content = f.read()
     soup = BeautifulSoup(content, "html.parser")
     candidate_sections = soup.find_all("h4", class_='h5')
     candidates = {}
