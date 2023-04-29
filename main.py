@@ -10,10 +10,7 @@ from telegram import Update, InlineQueryResultCachedSticker, InlineQueryResultAr
 from telegram.constants import ParseMode
 from telegram.ext import Application, CommandHandler, CallbackContext, InlineQueryHandler
 
-import database
-import qrcodes
-import scrapping
-import stickergen
+from helpers import qrcodes, database, scrapping, stickergen
 
 # Load the environment variables
 
@@ -67,11 +64,13 @@ async def register(update: Update, context: CallbackContext) -> None:
 
 
 async def candidatures(update: Update, context: CallbackContext) -> None:
-    print(await update.message.reply_text(scrapping.get_html_candidats(), parse_mode=ParseMode.HTML))
+    """Send a message with all the candidatures."""
+    await update.message.reply_text(scrapping.get_html_candidats(), parse_mode=ParseMode.HTML)
     return
 
 
 async def qr(update: Update, context: CallbackContext) -> None:
+    """Send a qr code with the given data encoded"""
     text_parts = update.message.text.split(' ', 1)
     if len(text_parts) > 1:
         _, text = text_parts
@@ -84,12 +83,14 @@ async def qr(update: Update, context: CallbackContext) -> None:
 
 
 async def decode(update: Update, context: CallbackContext) -> None:
+    """Decode the given qr code"""
     text = "Pas encore implémenté. Vous pouvez envoyer votre QR à @QRcodegen_bot pour le décoder !"
     await update.message.reply_text(text)
     return
 
 
 async def vcard(update: Update, context: CallbackContext) -> None:
+    """Send a vcard qr code with the given data encoded"""
     text_parts = update.message.text.split(' ', 1)
     fields = {
         'Prénom': '',
@@ -97,12 +98,14 @@ async def vcard(update: Update, context: CallbackContext) -> None:
         'Numéro de téléphone': '',
         'Adresse e-mail': '',
         'Nom de l\'entreprise': '',
-        'URL du site web': ''
+        'URL du site web': '',
     }
     if len(text_parts) > 1:
         _, text = text_parts
         text.split('\n')
         for line in text.split('\n')[1:]:
+            if line == "Done":
+                break
             key, value = line.split(' : ', 1)
             fields[key] = value
         vcard_dict = {
@@ -117,11 +120,12 @@ async def vcard(update: Update, context: CallbackContext) -> None:
         print("Sending vcard QR")
         await update.message.reply_photo(qr_vcard)
     else:
-        text = "Pour créer un contact vcard, vous pouvez copier le message compléter les champs appropriés\n"
+        text = "Pour créer un contact vcard, vous pouvez copier le message compléter les champs appropriés (renseigner au moins le nom ou le prénom, le reste est optionnel)\n"
         await update.message.reply_text(text)
         text = "/vcard \n"
         for key, value in fields.items():
             text += f"{key} : {value}\n"
+        text += "Done"
         await update.message.reply_text(text)
     return
 
@@ -227,4 +231,3 @@ def main() -> None:
 if __name__ == '__main__':
     database.setup()
     main()
-    # asyncio.run(auto_candidatures())
