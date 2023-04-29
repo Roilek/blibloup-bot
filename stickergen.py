@@ -57,7 +57,7 @@ def gen_sticker(text, font_name, color) -> Image:
 
 def gen_sticker_agep(text) -> Image:
     """Generate a sticker from a text, using the agepoly font."""
-    return gen_sticker(text, "agepoly.ttf", (227, 5, 19))
+    return gen_sticker(text, "resources/fonts/agepoly.ttf", (227, 5, 19))
 
 
 def test_gen_sticker() -> None:

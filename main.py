@@ -11,6 +11,7 @@ from telegram.constants import ParseMode
 from telegram.ext import Application, CommandHandler, CallbackContext, InlineQueryHandler
 
 import database
+import qr
 import scrapping
 import stickergen
 
@@ -66,23 +67,41 @@ async def candidatures(update: Update, context: CallbackContext) -> None:
     return
 
 
-async def auto_candidatures() -> None:
-    bot = telegram.Bot(token=TOKEN)
-    text = scrapping.get_html_candidats()
-    if text != database.get_ref_message("cdd"):
-        print("New candidature ! Sending to people")
-        database.set_ref_message("cdd", text)
-        users = database.get_subscribed_users("cdd")
-        text = "Timestamp : " + str(datetime.datetime.now().strftime("%d/%m/%Y, %H:%M")) + "\nNouvelle candidature !\n\n" + text
-        for user in users:
-            try:
-                await bot.send_message(chat_id=user['_id'], text=text, parse_mode=ParseMode.HTML)
-            except Exception as e:
-                print(e)
-        return
+async def vcard(update: Update, context: CallbackContext) -> None:
+    text_parts = update.message.text.split(' ', 1)
+    fields = {
+        'Prénom': '',
+        'Nom': '',
+        'Numéro de téléphone': '',
+        'Adresse e-mail': '',
+        'Nom de l\'entreprise': '',
+        'URL du site web': ''
+    }
+    if len(text_parts) > 1:
+        _, text = text_parts
+        text.split('\n')
+        for line in text.split('\n')[1:]:
+            key, value = line.split(' : ', 1)
+            fields[key] = value
+        vcard_dict = {
+            'fn': fields['Nom'] + ',' + fields['Prénom'],  # Nom complet
+            'n': fields['Nom']+';'+fields['Prénom']+';;;',  # Nom
+            'tel': fields['Numéro de téléphone'],  # Numéro de téléphone
+            'email': fields['Adresse e-mail'],  # Adresse e-mail
+            'org': fields['Nom de l\'entreprise'],  # Nom de l'entreprise
+            'url': fields['URL du site web']  # URL du site web
+        }
+        qr_vcard = qr.vcard_from_dict(vcard_dict)
+        print("Sending vcard QR")
+        await update.message.reply_photo(qr_vcard)
     else:
-        print("No new candidature !")
-        return
+        text = "Pour créer un contact vcard, vous pouvez copier le message compléter les champs appropriés\n"
+        await update.message.reply_text(text)
+        text = "/vcard \n"
+        for key, value in fields.items():
+            text += f"{key} : {value}\n"
+        await update.message.reply_text(text)
+    return
 
 
 async def inline(update: Update, context: CallbackContext) -> None:
@@ -119,6 +138,25 @@ async def dump(update: Update, context: CallbackContext) -> None:
     return
 
 
+async def auto_candidatures() -> None:
+    bot = telegram.Bot(token=TOKEN)
+    text = scrapping.get_html_candidats()
+    if text != database.get_ref_message("cdd"):
+        print("New candidature ! Sending to people")
+        database.set_ref_message("cdd", text)
+        users = database.get_subscribed_users("cdd")
+        text = "Timestamp : " + str(datetime.datetime.now().strftime("%d/%m/%Y, %H:%M")) + "\nNouvelle candidature !\n\n" + text
+        for user in users:
+            try:
+                await bot.send_message(chat_id=user['_id'], text=text, parse_mode=ParseMode.HTML)
+            except Exception as e:
+                print(e)
+        return
+    else:
+        print("No new candidature !")
+        return
+
+
 def main() -> None:
     """Start the bot."""
     print("Going live!")
@@ -145,6 +183,7 @@ def main() -> None:
     application.add_handler(CommandHandler("agep", agep))
     application.add_handler(CommandHandler("reg", register))
     application.add_handler(CommandHandler("cdd", candidatures))
+    application.add_handler(CommandHandler("vcard", vcard))
     application.add_handler(CommandHandler("dump", dump))
 
     # Set up the InlineQueryHandler for the agep function
