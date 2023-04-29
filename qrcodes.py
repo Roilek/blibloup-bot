@@ -11,3 +11,12 @@ def vcard_from_dict(vcard_dict: dict) -> bytes:
     qr_code.png(qr_code_buffer, scale=8)
     qr_code_buffer.seek(0)
     return qr_code_buffer.getvalue()
+
+
+def qr_from_text(text: str) -> bytes:
+    """Returns a qr code image from a text"""
+    qr_code = pyqrcode.create(text)
+    qr_code_buffer = BytesIO()
+    qr_code.png(qr_code_buffer, scale=8)
+    qr_code_buffer.seek(0)
+    return qr_code_buffer.getvalue()

@@ -11,7 +11,7 @@ from telegram.constants import ParseMode
 from telegram.ext import Application, CommandHandler, CallbackContext, InlineQueryHandler
 
 import database
-import qr
+import qrcodes
 import scrapping
 import stickergen
 
@@ -36,6 +36,10 @@ async def help_command(update: Update, context: CallbackContext) -> None:
     text = "Vous pouvez utiliser les commandes suivantes !\n"
     text += "/agep <text> : génère un sticker avec le texte donné\n"
     text += "/cdd : affiche les candidatures en cours\n"
+    text += "/reg cdd : recevoir une notification des nouvelles candidatures cdd\n"
+    text += "/qr <url> : génère un qr code avec l'url donné (ou n'importe quel texte)\n"
+    text += "/decode : décode le QR code donné\n"
+    text += "/vcard : créer un qr code de partage d'un contact\n"
     text += "/help : affiche ce message\n"
     await update.message.reply_text(text)
     return
@@ -67,6 +71,24 @@ async def candidatures(update: Update, context: CallbackContext) -> None:
     return
 
 
+async def qr(update: Update, context: CallbackContext) -> None:
+    text_parts = update.message.text.split(' ', 1)
+    if len(text_parts) > 1:
+        _, text = text_parts
+        qr_code = qrcodes.qr_from_text(text)
+        await update.message.reply_photo(qr_code)
+    else:
+        text = "Pour créer qr code, envoyer /qr suivi du text à encoder\n"
+        await update.message.reply_text(text)
+        return
+
+
+async def decode(update: Update, context: CallbackContext) -> None:
+    text = "Pas encore implémenté. Vous pouvez envoyer votre QR à @QRcodegen_bot pour le décoder !"
+    await update.message.reply_text(text)
+    return
+
+
 async def vcard(update: Update, context: CallbackContext) -> None:
     text_parts = update.message.text.split(' ', 1)
     fields = {
@@ -91,7 +113,7 @@ async def vcard(update: Update, context: CallbackContext) -> None:
             'org': fields['Nom de l\'entreprise'],  # Nom de l'entreprise
             'url': fields['URL du site web']  # URL du site web
         }
-        qr_vcard = qr.vcard_from_dict(vcard_dict)
+        qr_vcard = qrcodes.vcard_from_dict(vcard_dict)
         print("Sending vcard QR")
         await update.message.reply_photo(qr_vcard)
     else:
@@ -183,6 +205,8 @@ def main() -> None:
     application.add_handler(CommandHandler("agep", agep))
     application.add_handler(CommandHandler("reg", register))
     application.add_handler(CommandHandler("cdd", candidatures))
+    application.add_handler(CommandHandler("qr", qr))
+    application.add_handler(CommandHandler("decode", decode))
     application.add_handler(CommandHandler("vcard", vcard))
     application.add_handler(CommandHandler("dump", dump))
 
