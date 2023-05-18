@@ -56,6 +56,18 @@ def subscribe_user(user_id: int, user_name: str, func: str) -> bool:
     return True
 
 
+def unsubscribe_user(user_id: int, func: str) -> bool:
+    db = client['blibloups']
+    user_table = db['users']
+    user = user_table.find_one({'_id': user_id})
+    if user is None:
+        return False
+    if func in user['functions']:
+        user['functions'].remove(func)
+        user_table.update_one({'_id': user_id}, {'$set': {'functions': user['functions']}})
+    return True
+
+
 def get_subscribed_users(func: str) -> list:
     db = client['blibloups']
     user_table = db['users']

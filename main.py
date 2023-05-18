@@ -63,6 +63,16 @@ async def register(update: Update, context: CallbackContext) -> None:
     return
 
 
+async def stop_function(update: Update, context: CallbackContext) -> None:
+    """Unsubscribe people who using a specific function."""
+    _, function = update.message.text.split(' ', 1)
+    users = database.get_subscribed_users(function)
+    for user in users:
+        database.unsubscribe_user(user['_id'], function)
+        await context.bot.send_message(chat_id=user['_id'], text=f"Un·e admin a désactivé les notifications pour la fonctionnalité {function} ! Tu as été désabonné·e !")
+    return
+
+
 async def candidatures(update: Update, context: CallbackContext) -> None:
     """Send a message with all the candidatures."""
     await update.message.reply_text(scrapping.get_html_candidats(), parse_mode=ParseMode.HTML)
@@ -208,6 +218,7 @@ def main() -> None:
     application.add_handler(CommandHandler("help", help_command))
     application.add_handler(CommandHandler("agep", agep))
     application.add_handler(CommandHandler("reg", register))
+    application.add_handler(CommandHandler("stop", stop_function))
     application.add_handler(CommandHandler("cdd", candidatures))
     application.add_handler(CommandHandler("qr", qr))
     application.add_handler(CommandHandler("decode", decode))
