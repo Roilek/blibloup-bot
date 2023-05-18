@@ -6,3 +6,5 @@ beautifulsoup4~=4.12.2
 pymongo~=4.3.3
 PyQRCode~=1.2.1
 pypng~=0.20220715.0
+openai~=0.27.6
+icalendar~=5.0.5

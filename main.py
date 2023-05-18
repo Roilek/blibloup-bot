@@ -10,7 +10,7 @@ from telegram import Update, InlineQueryResultCachedSticker, InlineQueryResultAr
 from telegram.constants import ParseMode
 from telegram.ext import Application, CommandHandler, CallbackContext, InlineQueryHandler
 
-from helpers import qrcodes, database, scrapping, stickergen
+from helpers import qrcodes, database, scrapping, stickergen, ia
 
 # Load the environment variables
 
@@ -140,6 +140,13 @@ async def vcard(update: Update, context: CallbackContext) -> None:
     return
 
 
+async def gpt(update: Update, context: CallbackContext) -> None:
+    """Send the ai generated answer to the user message"""
+    _, message = update.message.text.split(' ', 1)
+    await update.message.reply_text(ia.prompt(message))
+    return
+
+
 async def inline(update: Update, context: CallbackContext) -> None:
     """Generate a sticker based on the inline query."""
     # Get the text from the inline query and generate the sticker from it (or use a default text)
@@ -223,6 +230,7 @@ def main() -> None:
     application.add_handler(CommandHandler("qr", qr))
     application.add_handler(CommandHandler("decode", decode))
     application.add_handler(CommandHandler("vcard", vcard))
+    application.add_handler(CommandHandler("gpt", gpt))
     application.add_handler(CommandHandler("dump", dump))
 
     # Set up the InlineQueryHandler for the agep function

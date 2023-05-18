@@ -31,6 +31,8 @@ if __name__ == "__main__":
     current_date = datetime.now().strftime("%A %d %B %Y %Hh%Mmn")
     find_date = "Lundi prochain"
     print(current_date)
-    print(prompt(f"Extract the date with format DD/MM/YYYY HhMmn for the following text: {find_date}. Answer nothing more than "
-                f"the formatted date. Note that current date is: {current_date}."))
+    prompt_str = f"Extract the date with format DD/MM/YYYY HhMmn for the following text: {find_date}."
+    prompt_str += "Answer nothing more than "
+    prompt_str += f"the formatted date. Note that current date is: {current_date}."
+    print(prompt(prompt_str))
 
