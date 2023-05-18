@@ -6,7 +6,7 @@ import uuid
 
 import telegram
 from dotenv import load_dotenv
-from telegram import Update, InlineQueryResultCachedSticker, InlineQueryResultArticle, InputTextMessageContent
+from telegram import Update, InlineQueryResultCachedSticker, InlineQueryResultCachedDocument
 from telegram.constants import ParseMode
 from telegram.ext import Application, CommandHandler, CallbackContext, InlineQueryHandler
 
@@ -151,11 +151,9 @@ async def ics(update: Update, context: CallbackContext) -> None:
     """Send .ics file from natural language prompt"""
     _, prompt = update.message.text.split(' ', 1)
     event_dict = ia.extract_event(prompt)
-    file = mycalendar.create_event_ics(event_dict["name"], event_dict["start"], event_dict["end"])
-    caption = "Hey!\nI'm an auto-generated event for the following prompt.\n"
-    caption += "I hope to be correct!\n\n"
-    caption += "Prompt:\n_" + prompt + "_"
-    await update.message.reply_document(document=file, caption=caption, parse_mode=ParseMode.MARKDOWN)
+    document = mycalendar.create_event_ics(event_dict["name"], event_dict["start"], event_dict["end"])
+    caption = f"Add me to your calendar!\n\n{event_dict['name']}\nFrom {str(event_dict['start'])} to {event_dict['end']}"
+    await update.message.reply_document(document=document, caption=caption, parse_mode=ParseMode.MARKDOWN)
     return
 
 
@@ -167,22 +165,43 @@ async def inline(update: Update, context: CallbackContext) -> None:
         return
 
     result = []
+    if len(query.split(' ')) > 1:
+        command, prompt = query.split(' ', 1)
+    else:
+        command = query
+        prompt = query
 
-    if query == 'cdd':
-        html_text = scrapping.get_html_candidats()
-        result.append(InlineQueryResultArticle(
-            id=str(uuid.uuid4()),
-            title='Les candidatures à ce jour !',
-            input_message_content=InputTextMessageContent(html_text, parse_mode='HTML')
+    # To maintain first if even through deprecations
+    if False:
+        pass
+    # Inactive until next applying session
+    # elif command == 'cdd':
+    #     html_text = scrapping.get_html_candidats()
+    #     result.append(InlineQueryResultArticle(
+    #         id=str(uuid.uuid4()),
+    #         title='Les candidatures à ce jour !',
+    #         input_message_content=InputTextMessageContent(html_text, parse_mode='HTML')
+    #     ))
+    elif command == 'ics':
+        event_dict = ia.extract_event(prompt)
+        document = mycalendar.create_event_ics(event_dict["name"], event_dict["start"], event_dict["end"])
+        document_message = await context.bot.send_document(chat_id=LOG_GROUP_ID, document=document)
+        print(document_message)
+        result.append(InlineQueryResultCachedDocument(
+            id = str(uuid.uuid4()),
+            title=event_dict["name"],
+            document_file_id=document_message.document.file_id,
+            description=f"""From {event_dict["start"]} to {event_dict["end"]}""",
+            caption=f"""Add me to your calendar!\n\n{event_dict["name"]}\nFrom {str(event_dict["start"])} to {event_dict["end"]}""",
         ))
     else:
-        sticker = stickergen.gen_sticker_agep(query)
+        sticker = stickergen.gen_sticker_agep(prompt)
         sticker_message = await context.bot.send_sticker(chat_id=LOG_GROUP_ID, sticker=sticker)
         result.append(InlineQueryResultCachedSticker(
             id=str(uuid.uuid4()),
             sticker_file_id=sticker_message.sticker.file_id,
         ))
-
+    print(result)
     await update.inline_query.answer(result, cache_time=0)
     return
 
