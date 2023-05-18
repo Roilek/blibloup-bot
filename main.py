@@ -10,7 +10,7 @@ from telegram import Update, InlineQueryResultCachedSticker, InlineQueryResultAr
 from telegram.constants import ParseMode
 from telegram.ext import Application, CommandHandler, CallbackContext, InlineQueryHandler
 
-from helpers import qrcodes, database, scrapping, stickergen, ia
+from helpers import qrcodes, database, scrapping, stickergen, ia, mycalendar
 
 # Load the environment variables
 
@@ -147,6 +147,15 @@ async def gpt(update: Update, context: CallbackContext) -> None:
     return
 
 
+async def ics(update: Update, context: CallbackContext) -> None:
+    """Send .ics file from natural language prompt"""
+    _, prompt = update.message.text.split(' ', 1)
+    event_dict = ia.extract_event(prompt)
+    file = mycalendar.create_event_ics(event_dict["name"], event_dict["start"], event_dict["end"])
+    await update.message.reply_document(file)
+    return
+
+
 async def inline(update: Update, context: CallbackContext) -> None:
     """Generate a sticker based on the inline query."""
     # Get the text from the inline query and generate the sticker from it (or use a default text)
@@ -231,6 +240,7 @@ def main() -> None:
     application.add_handler(CommandHandler("decode", decode))
     application.add_handler(CommandHandler("vcard", vcard))
     application.add_handler(CommandHandler("gpt", gpt))
+    application.add_handler(CommandHandler("ics", ics))
     application.add_handler(CommandHandler("dump", dump))
 
     # Set up the InlineQueryHandler for the agep function
