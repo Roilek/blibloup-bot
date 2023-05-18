@@ -42,6 +42,7 @@ def extract_event(event_data: str) -> dict[str, datetime, datetime]:
     prompt_str += "Note that if no date is provided, you should indicate one anyway, try your best!\n"
     prompt_str += "Note that if no time is provided, you should indicate one anyway, try your best!\n"
     prompt_str += "Note that the result will be parsed as a dict by ast lib, it should therefore only consist of a string immediately interpretable as dict without any comment.\n"
+    prompt_str += "If no time is specified, try not to create an all date event but instead a coherent timeslot.\n"
     prompt_str += "Create a dict-like object with the following fields. Date should follow iso format:\n"
     prompt_str += "'name':\n"
     prompt_str += "'start':\n"
@@ -50,7 +51,6 @@ def extract_event(event_data: str) -> dict[str, datetime, datetime]:
     prompt_str += event_data.encode('utf-8').decode('unicode-escape')
 
     result = prompt(prompt_str)
-    print(result)
     dict_result = ast.literal_eval(result)
     dict_result["start"] = datetime.fromisoformat(dict_result["start"])
     dict_result["end"] = datetime.fromisoformat(dict_result["end"])

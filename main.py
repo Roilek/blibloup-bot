@@ -152,7 +152,10 @@ async def ics(update: Update, context: CallbackContext) -> None:
     _, prompt = update.message.text.split(' ', 1)
     event_dict = ia.extract_event(prompt)
     file = mycalendar.create_event_ics(event_dict["name"], event_dict["start"], event_dict["end"])
-    await update.message.reply_document(file)
+    caption = "Hey!\nI'm an auto-generated event for the following prompt.\n"
+    caption += "I hope to be correct!\n\n"
+    caption += "Prompt:\n_" + prompt + "_"
+    await update.message.reply_document(document=file, caption=caption, parse_mode=ParseMode.MARKDOWN)
     return
 
 
