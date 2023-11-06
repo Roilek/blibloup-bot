@@ -18,6 +18,7 @@ def prompt(prompt_str: str) -> str:
             {"role": "user", "content": prompt_str}
         ]
     )
+
     finish_reason = completion.choices[0].finish_reason
     if finish_reason == "stop":
         answer = completion.choices[0].message.content

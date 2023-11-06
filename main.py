@@ -38,6 +38,8 @@ async def help_command(update: Update, context: CallbackContext) -> None:
     text += "/decode : décode le QR code donné\n"
     text += "/vcard : créer un qr code de partage d'un contact\n"
     text += "/help : affiche ce message\n"
+    text += "/ics <text> : créée un événement calendrier à partir du texte renseigné avec l'aide de ChatGPT\n"
+    text += "/gpt <text> : fais une requête à ChatGPT\n"
     await update.message.reply_text(text)
     return
 
