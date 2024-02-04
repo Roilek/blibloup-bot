@@ -10,7 +10,7 @@ from telegram import Update, InlineQueryResultCachedSticker, InlineQueryResultCa
 from telegram.constants import ParseMode
 from telegram.ext import Application, CommandHandler, CallbackContext, InlineQueryHandler
 
-from helpers import qrcodes, database, scrapping, stickergen, ia, mycalendar
+from helpers import qrcodes, database, scrapping, stickergen, ia, mycalendar, keyboards
 
 # Load the environment variables
 
@@ -238,7 +238,12 @@ async def auto_get_data() -> None:
     users = database.get_subscribed_users("data")
     for user in users:
         try:
-            await bot.send_message(chat_id=user['_id'], text="you are registered!", parse_mode=ParseMode.HTML)
+            # For each data user wants
+            # At frequency user wants
+            # User can specify the question
+            # How to edit the answer ?
+            # Provide a shortcut to force-set a value
+            await bot.send_message(chat_id=user['_id'], text="Give your data!", reply_markup=keyboards.get_keyboard(), parse_mode=ParseMode.HTML)
         except Exception as e:
             print(e)
     return
