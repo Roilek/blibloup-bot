@@ -233,6 +233,17 @@ async def auto_candidatures() -> None:
         return
 
 
+async def auto_get_data() -> None:
+    bot = telegram.Bot(token=TOKEN)
+    users = database.get_subscribed_users("data")
+    for user in users:
+        try:
+            await bot.send_message(chat_id=user['_id'], text="you are registered!", parse_mode=ParseMode.HTML)
+        except Exception as e:
+            print(e)
+    return
+
+
 def main() -> None:
     """Start the bot."""
     print("Going live!")
@@ -242,12 +253,15 @@ def main() -> None:
     parser.add_argument("function",
                         nargs='?',
                         help="The function to execute",
-                        choices=["cdd"])
+                        choices=["cdd","data"])
     args = parser.parse_args()
 
     # If a function is specified, execute it and exit
     if args.function == "cdd":
         asyncio.run(auto_candidatures())
+        return
+    elif args.function == "data":
+        asyncio.run(auto_get_data())
         return
 
     # Create application
