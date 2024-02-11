@@ -20,7 +20,7 @@ import telegram
 from telegram import Update
 from telegram.ext import Application, CommandHandler, InlineQueryHandler, CallbackContext
 
-from new_helpers import qrcodes, messages
+from new_helpers import qrcodes, messages, mycalendar, ia
 
 load_dotenv()
 
@@ -113,6 +113,22 @@ async def qr_wifi(update: Update, context: CallbackContext):
         await update.message.reply_text(messages.prompt_data("/wifi", fields))
     return
 
+# ics generation
+async def ics(update: Update, context: CallbackContext) -> None:
+    if ' ' in update.message.text:
+        _, input = update.message.text.split(' ', 1)
+        event_data = ia.extract_event(input)
+        caption = 'Add me to your calendar!\n\n'
+        caption += event_data['name']+'\n'
+        caption += f"From {event_data['start']} to {event_data['end']}\n"
+        document=mycalendar.create_event_ics(*event_data.values())
+        await update.message.reply_document(caption=caption, document=document)
+    else:
+        text = 'Please provide info to generate the ics file\n'
+        text += 'Example : /ics breakfast tomorrow morning'
+        await update.message.reply_text(text)
+    return
+
 
 def main() -> None:
     # Create application
@@ -124,6 +140,7 @@ def main() -> None:
     application.add_handler(CommandHandler("qr", qr))
     application.add_handler(CommandHandler("vcard", qr_vcard))
     application.add_handler(CommandHandler("wifi", qr_wifi))
+    application.add_handler(CommandHandler("ics", ics))
 
     # Start the Bot
     print("Bot starting...")

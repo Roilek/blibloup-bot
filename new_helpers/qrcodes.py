@@ -3,7 +3,6 @@ from io import BytesIO
 import pyqrcode
 
 
-
 def qr_from_text(text: str) -> bytes:
     """Returns a qr code image from a text"""
     qr = pyqrcode.create(text)
