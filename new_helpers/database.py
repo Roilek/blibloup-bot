@@ -200,7 +200,7 @@ def get_data(sub: Subscription, date: str) -> list[str]:
         return None
     db = client['blibloups']
     subscription_table = db['subscriptions']
-    return subscription_table.find_one({'user_id': sub.user_id, 'name': sub.name})['data'].get(date, None)
+    return subscription_table.find_one({'user_id': sub.user_id, 'name': sub.name})['data'].get(date, [])
 
 
 if __name__ == "__main__":
