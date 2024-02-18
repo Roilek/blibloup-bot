@@ -16,8 +16,12 @@ def create_telegram_keyboard_frequency(function_name: str, name: str, frequencie
     return InlineKeyboardMarkup(keyboard)
 
 # Create Telegram keyboard from list of items
-def create_telegram_keyboard_from_list(function_name: str, name: str, items: list[str], timestamp = None, chosen: str = None) -> InlineKeyboardMarkup:
-    keyboard = [[InlineKeyboardButton(("✅ " if chosen == item else "") + item, callback_data=SEPARATOR.join([function_name, name, item])) for item in items]]
+def create_telegram_keyboard_from_list(function_name: str, name: str, items: list[str], timestamp = None, chosen: str = None, col: int = 1) -> InlineKeyboardMarkup:
+    # create the keyboard according to the number of columns
+    if col == 1:
+        keyboard = [[InlineKeyboardButton(("✅ " if chosen == item else "") + item, callback_data=SEPARATOR.join([function_name, name, item]))] for item in items]
+    else:
+        keyboard = [[InlineKeyboardButton(("✅ " if chosen == item else "") + item, callback_data=SEPARATOR.join([function_name, name, item])) for item in items[i:i + col]] for i in range(0, len(items), col)]
     return InlineKeyboardMarkup(keyboard)
 
 # Create Telegram keyboard with a function identifier and the name of the subscription

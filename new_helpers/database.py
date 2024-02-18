@@ -68,13 +68,9 @@ def subscription_exists(user_id: int = None, name: str = None, sub: Subscription
     subscription_table = db['subscriptions']
 
     if sub is not None:
-        query = {'user_id': sub.user_id, 'name': sub.name}
-    elif user_id is not None and name is not None:
-        query = {'user_id': user_id, 'name': name}
-    else:
-        raise ValueError("You have to provide either the user_id and subscription name or a correct Subscription object")
+        return subscription_exists(user_id=sub.user_id, name=sub.name)
 
-    return subscription_table.find_one(query) is not None
+    return subscription_table.find_one({'user_id': user_id, 'name': name}) is not None
 
 # Create a new subscription for a user
 def create_subscription(sub: Subscription) -> bool:
@@ -86,30 +82,28 @@ def create_subscription(sub: Subscription) -> bool:
     return True
 
 # Get a subscription from parameters
-def get_subscription_from_param(user_id: int, name: str) -> Subscription:
+def get_subscription(user_id: int = None, name: str = None, sub: Subscription = None) -> Subscription:
+    if sub is not None:
+        return get_subscription(user_id=sub.user_id, name=sub.name)
     db = client['blibloups']
     subscription_table = db['subscriptions']
     sub = subscription_table.find_one({'user_id': user_id, 'name': name})
-    return Subscription(sub_dict=sub)
-
-# Get a subscription
-def get_subscription(sub: Subscription) -> Subscription:
-    return get_subscription_from_param(sub.user_id, sub.name)
+    return Subscription(sub_dict=sub) if sub is not None else None
 
 # Get subscriptions by frequency
-def get_subscriptions_by_frequency(frequency: Frequency) -> list[Subscription]:
+def get_subscriptions(user_id: int = None, frequency: Frequency = None) -> list[Subscription]:
     db = client['blibloups']
     subscription_table = db['subscriptions']
-    return subscription.list_to_subscriptions(subscription_table.find({'frequency': frequency.value}))
-
-# Get subcriptions by user
-def get_subscriptions_by_user(user_id: int) -> list[Subscription]:
-    db = client['blibloups']
-    subscription_table = db['subscriptions']
-    return subscription.list_to_subscriptions(subscription_table.find({'user_id': user_id}))
+    query = {}
+    if user_id is not None:
+        query['user_id'] = user_id
+    if frequency is not None:
+        query['frequency'] = frequency.value
+    return subscription.list_to_subscriptions(subscription_table.find(query))
 
 # Delete a subscription from parameters
 def delete_subscription_from_parameters(user_id: int, name: str) -> bool:
+    
     if not subscription_exists(user_id=user_id, name=name):
         return False
     db = client['blibloups']
@@ -121,56 +115,34 @@ def delete_subscription_from_parameters(user_id: int, name: str) -> bool:
 def delete_subscription(sub: Subscription) -> bool:
     return delete_subscription_from_parameters(sub.user_id, sub.name)
 
-# Update a subscription name
-def update_subscription_name(sub: Subscription, name: str) -> Subscription:
+# Update a subscription
+def update_subscription(sub: Subscription, new_name: str = None, new_description: str = None, new_answers: list[str] = None, new_frequency: Frequency = None, new_radio: bool = None, new_state: State = None) -> Subscription:
     if not subscription_exists(sub=sub):
         return None
     db = client['blibloups']
     subscription_table = db['subscriptions']
-    subscription_table.update_one({'user_id': sub.user_id, 'name': sub.name}, {'$set': {'name': name}})
-    sub.name = name
+    query = {}
+    name = sub.name
+    if new_name is not None:
+        query['name'] = new_name
+        sub.name = new_name
+    if new_description is not None:
+        query['description'] = new_description
+        sub.description = new_description
+    if new_answers is not None:
+        query['answers'] = new_answers
+        sub.answers = new_answers
+    if new_frequency is not None:
+        query['frequency'] = new_frequency.value
+        sub.frequency = new_frequency.value
+    if new_radio is not None:
+        query['radio'] = new_radio
+        sub.radio = new_radio
+    if new_state is not None:
+        query['state'] = new_state.value
+        sub.state = new_state.value
+    subscription_table.update_one({'user_id': sub.user_id, 'name': name}, {'$set': query})
     return sub
-
-# Update a subscription description
-def update_subscription_description(sub: Subscription, description: str) -> Subscription:
-    if not subscription_exists(sub=sub):
-        return None
-    db = client['blibloups']
-    subscription_table = db['subscriptions']
-    subscription_table.update_one({'user_id': sub.user_id, 'name': sub.name}, {'$set': {'description': description}})
-    sub.description = description
-    return sub
-
-# Update a subscription answers
-def update_subscription_answers(sub: Subscription, answers: list) -> Subscription:
-    if not subscription_exists(sub=sub):
-        return None
-    db = client['blibloups']
-    subscription_table = db['subscriptions']
-    subscription_table.update_one({'user_id': sub.user_id, 'name': sub.name}, {'$set': {'answers': answers}})
-    sub.answers = answers
-    return sub
-
-# Update a subscription frequency
-def update_subscription_frequency(sub: Subscription, frequency: str) -> Subscription:
-    if not subscription_exists(sub=sub):
-        return None
-    db = client['blibloups']
-    subscription_table = db['subscriptions']
-    subscription_table.update_one({'user_id': sub.user_id, 'name': sub.name}, {'$set': {'frequency': frequency}})
-    sub.frequency = frequency
-    return sub
-
-# Update subscription state
-def update_subscription_state(sub: Subscription, state: State) -> Subscription:
-    if not subscription_exists(sub=sub):
-        return None
-    db = client['blibloups']
-    subscription_table = db['subscriptions']
-    subscription_table.update_one({'user_id': sub.user_id, 'name': sub.name}, {'$set': {'state': state.value}})
-    sub.state = state.value
-    return True
-
 
 # --- SUBSCRIPTION ANSWERS ---
 

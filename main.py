@@ -201,7 +201,7 @@ async def create_subscription(update: Update, context: CallbackContext) -> None:
             sub = Subscription(update.message.from_user.id, name, description, answers)
             database.create_subscription(sub)
             markup = mytelegram.create_telegram_keyboard_frequency('freq', name, [Frequency.HOURLY, Frequency.DAILY])
-            await update.message.reply_text('Choose you frequency', reply_markup=markup)
+            await update.message.reply_text('Choose your frequency', reply_markup=markup)
             return
         except Exception as e:
             print(e)
@@ -213,13 +213,33 @@ async def create_subscription(update: Update, context: CallbackContext) -> None:
     await update.message.reply_text(messages.prompt_data("/sub", fields))
     return
 
+# Edit a subscription
+async def edit_subscription(update: Update, context: CallbackContext) -> None:
+    if ' ' in update.message.text:
+        _, input = update.message.text.split(' ', 1)
+        sub = database.get_subscription(user_id=update.message.from_user.id, name=input)
+        if not database.subscription_exists(sub=sub):
+            text = 'This subscription doesn\'t exist\n'
+            text += 'Please send /editsub to find the subscription you are looking for\n'
+        else:
+            # Send subscription edit menu
+            text = 'Edit sub menu is WIP'
+        await update.message.reply_text(text)
+    else:
+        text = 'Please choose the subscription you want to edit\n'
+        subscriptions = database.get_subscriptions(user_id=update.message.from_user.id)
+        # Create a keyboard with all the reservations
+        markup = mytelegram.create_telegram_keyboard_from_list('editsub', 'sub', [sub.name for sub in subscriptions], col=3)
+        await update.message.reply_text(text, reply_markup=markup)
+    return
+
 # Unsubscribe from periodic prompting
 async def unsubscribe(update: Update, context: CallbackContext) -> None:
     if ' ' in update.message.text:
         _, input = update.message.text.split(' ', 1)
-        sub = database.get_subscription_from_param(update.message.from_user.id, input)
-        if database.subscription_exists(sub):
-            database.update_subscription_state(sub, database.State.INACTIVE)
+        sub = database.get_subscription(user_id=update.message.from_user.id, name=input)
+        if database.subscription_exists(sub=sub):
+            database.update_subscription(sub=sub, new_state=database.State.INACTIVE)
             text = 'You have been unsubscribed from '
         else:
             text = 'You are not subscribed to '
@@ -234,10 +254,10 @@ async def unsubscribe(update: Update, context: CallbackContext) -> None:
 async def delete_subscription(update: Update, context: CallbackContext) -> None:
     if ' ' in update.message.text:
         _, input = update.message.text.split(' ', 1)
-        sub = database.get_subscription_from_param(update.message.from_user.id, input)
+        sub = database.get_subscription(user_id=update.message.from_user.id, name=input)
         text = input + ' '
-        if database.subscription_exists(sub):
-            database.delete_subscription(sub)
+        if database.subscription_exists(sub=sub):
+            database.delete_subscription(sub=sub)
             text += 'has been deleted\n'
         else:
             text += 'doesn\'t exist'
@@ -253,25 +273,42 @@ async def handle_callback_query(update: Update, context: CallbackContext) -> Non
     function, data = query.data.split(SEPARATOR, 1)
     if function == 'freq':
         name, frequency = data.split(SEPARATOR)
-        sub = database.get_subscription_from_param(update.callback_query.from_user.id, name)
-        database.update_subscription_frequency(sub, frequency)
-        database.update_subscription_state(sub, database.State.ACTIVE)
-        await query.edit_message_text(text=f"You have been subscribed to {name} with frequency {frequency}")
+        sub = database.get_subscription(user_id=update.callback_query.from_user.id, name=name)
+        database.update_subscription(sub=sub, new_frequency=Frequency(frequency))
+        database.update_subscription(sub=sub, new_state=database.State.ACTIVE)
+        markup = mytelegram.create_telegram_keyboard_from_list('radio', name, ['Single choice (radio button)', 'Multiple choice (checkbox)'])
+        await query.edit_message_text(text='Choose your type of answer', reply_markup=markup)
+    elif function == 'radio':
+        name, radio = data.split(SEPARATOR)
+        sub = database.get_subscription(user_id=update.callback_query.from_user.id, name=name)
+        database.update_subscription(sub=sub, new_radio=(radio == 'Single choice (radio button)'))
+        text = f"You have been subscribed to {name} with:\n"
+        text += f"  - frequency {sub.frequency}\n"
+        text += f"  - {('single' if sub.radio else 'multiple')} choice\n\n"
+        text += 'You can now start answering your prompts\n'
+        text += 'This is how the prompt will look like\n'
+        text += 'You can edit it by sending /editsub <name>\n'
+        text += 'If needed you can start over by sending /del <name>\n'
+        await query.edit_message_text(text=text)
+        text = f"<b>{sub.name}!</b>\n"
+        text += f"{sub.description}"
+        markup = mytelegram.create_telegram_keyboard_from_list_with_timestamp('answer', sub.name, sub.answers, str(0), data=database.get_data(sub, datetime.now().date().isoformat()))
+        await query.message.reply_text(text, reply_markup=markup, parse_mode=ParseMode.HTML)
     elif function == 'answer':
         name, timestamp, option = data.split(SEPARATOR)
-        sub = database.get_subscription_from_param(update.callback_query.from_user.id, name)
+        sub = database.get_subscription(user_id=update.callback_query.from_user.id, name=name)
         data = database.update_data(sub, datetime.now().date().isoformat(), option)
-        # TODO change timestamp to keep the old one
-        # TODO change method name
-        markup = mytelegram.create_telegram_keyboard_from_list_with_timestamp('answer', sub.name, sub.answers, timestamp, data=data)
-        await query.edit_message_reply_markup(reply_markup=markup)
+        if data is None:
+            await query.edit_message_text(text=f"{name} subscription doesn\'t exist, it most likely have been deleted")
+        else:
+            markup = mytelegram.create_telegram_keyboard_from_list_with_timestamp('answer', sub.name, sub.answers, timestamp, data=data)
+            await query.edit_message_reply_markup(reply_markup=markup)
     await query.answer()
     return
 
 # Handle inline query
 async def handle_inline_query(update: Update, context: CallbackContext) -> None:
     query = update.inline_query.query
-    print(query)
     if not query:
         return
     
@@ -288,7 +325,7 @@ async def handle_inline_query(update: Update, context: CallbackContext) -> None:
 # Auto subscriptions
 async def auto_subscriptions() -> None:
     bot = telegram.Bot(token=TOKEN)
-    subs: list[Subscription] = database.get_subscriptions_by_frequency(Frequency.DAILY)
+    subs: list[Subscription] = database.get_subscriptions(frequency=Frequency.DAILY)
     for sub in subs:
         text = f"<b>{sub.name}</b>!\n"
         text += f"{sub.description}\n"
@@ -318,6 +355,7 @@ def main() -> None:
     application.add_handler(CommandHandler("agep", agep))
     # Subscriptions commands
     application.add_handler(CommandHandler("subhelp", sub_help))
+    application.add_handler(CommandHandler("editsub", edit_subscription))
     application.add_handler(CommandHandler("sub", create_subscription))
     application.add_handler(CommandHandler("unsub", unsubscribe))
     application.add_handler(CommandHandler("del", delete_subscription))
