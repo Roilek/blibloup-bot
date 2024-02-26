@@ -311,7 +311,7 @@ async def handle_inline_query(update: Update, context: CallbackContext) -> None:
     query = update.inline_query.query
     if not query:
         return
-    
+
     results = []
     sticker = stickergen.gen_sticker_agep(query)
     sticker_message = await context.bot.send_sticker(chat_id=LOG_GROUP_ID, sticker=sticker)
@@ -323,9 +323,9 @@ async def handle_inline_query(update: Update, context: CallbackContext) -> None:
     return
 
 # Auto subscriptions
-async def auto_subscriptions() -> None:
+async def auto_subscriptions(freq: Frequency=Frequency.DAILY) -> None:
     bot = telegram.Bot(token=TOKEN)
-    subs: list[Subscription] = database.get_subscriptions(frequency=Frequency.DAILY)
+    subs: list[Subscription] = database.get_subscriptions(frequency=freq)
     for sub in subs:
         text = f"<b>{sub.name}</b>!\n"
         text += f"{sub.description}\n"
@@ -371,12 +371,21 @@ def main() -> None:
     parser.add_argument("function",
                         nargs='?',
                         help="The function to execute",
-                        choices=["sub"])
+                        choices=["sub", "subday", "subhour", "subweek"])
     args = parser.parse_args()
 
     # If a function is specified, execute it and exit
     if args.function == "sub":
         asyncio.run(auto_subscriptions())
+        return
+    elif args.function == "subday":
+        asyncio.run(auto_subscriptions(Frequency.DAILY))
+        return
+    elif args.function == "subhour":
+        asyncio.run(auto_subscriptions(Frequency.HOURLY))
+        return
+    elif args.function == "subweek":
+        asyncio.run(auto_subscriptions(Frequency.WEEKLY))
         return
 
 
